@@ -1,0 +1,6 @@
+{
+  "name": "3D Scene Builder Pro",
+  "description": "An advanced web application for interactively creating, customizing, and visualizing 3D scenes. Features include object manipulation (meshes, lights), scene configuration (sky, terrain, camera), and GLB import/export functionality, all powered by React and Three.js with a sleek Tailwind CSS interface.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
