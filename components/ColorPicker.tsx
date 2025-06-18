@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ColorPickerProps } from '../types';
 
@@ -14,6 +15,10 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ label, color, onChange }) => 
           value={color}
           onChange={(e) => onChange(e.target.value)}
           className="w-8 h-8 p-0 border-none rounded cursor-pointer bg-transparent"
+          // The style below is a common workaround for color input styling issues.
+          // However, strict adherence to "NO INLINE STYLES" means we rely on browser default or Tailwind for this.
+          // For most modern browsers, direct class styling for type="color" is limited.
+          // The className above provides basic sizing.
         />
       </div>
     </div>

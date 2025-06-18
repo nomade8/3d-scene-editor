@@ -38,6 +38,7 @@ export interface BaseSceneObject {
   type: SceneObjectType;
   transform: Transform;
   parentId?: string; // ID of the parent group, if any
+  opacity?: number; // Optional: 0.0 (transparent) to 1.0 (opaque), defaults to 1.0
 }
 
 export interface MeshObject extends BaseSceneObject {
@@ -59,7 +60,7 @@ export interface DirectionalLightObject extends BaseSceneObject, LightProperties
   type: SceneObjectType.DirectionalLight;
 }
 
-export interface AmbientLightObject extends Omit<BaseSceneObject, 'transform' | 'parentId'>, LightProperties {
+export interface AmbientLightObject extends Omit<BaseSceneObject, 'transform' | 'parentId' | 'opacity'>, LightProperties {
   id: string;
   name: string;
   type: SceneObjectType.AmbientLight;

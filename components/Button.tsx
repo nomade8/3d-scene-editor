@@ -1,4 +1,7 @@
-  import React from 'react';
+
+import React from 'react';
+import { ButtonProps } from '../types';
+
 const Button: React.FC<ButtonProps> = ({ children, variant = 'primary', size = 'md', className = '', ...props }) => {
   const baseStyle = "font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 transition-colors duration-150 flex items-center justify-center";
   

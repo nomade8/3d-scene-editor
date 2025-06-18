@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   SelectableItem, SceneObjectType, MeshObject, PointLightObject, DirectionalLightObject, 
@@ -37,9 +38,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   }
 
   const isTerrainSelectedAndExists = selectedItem.type === SceneObjectType.Terrain && appState.terrain !== null;
-  // Cast selectedItem to TerrainConfig if it's the selected terrain that exists
   const currentTerrainConfig = isTerrainSelectedAndExists ? appState.terrain as TerrainConfig : null;
-
 
   const handleTransformChange = (axis: 'x' | 'y' | 'z', type: 'position' | 'rotation' | 'scale', value: number) => {
     if ('transform' in selectedItem && (selectedItem as SceneObject).transform) {
@@ -56,7 +55,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   };
 
   const handleIntensityChange = (newIntensity: number) => {
-      if ('intensity' in selectedItem) {
+     if ('intensity' in selectedItem) {
       onUpdateItem({ ...selectedItem, intensity: newIntensity });
     }
   };
@@ -75,34 +74,15 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
     }
   };
 
-  // Terrain specific updates
   const handleTerrainPropertyChange = (property: keyof TerrainConfig, value: any) => {
     if (currentTerrainConfig) {
       onUpdateItem({ ...currentTerrainConfig, [property]: value });
     }
   };
 
-  const handleColor1Change = (newColor: string) => {
-    if (selectedItem.type === SceneObjectType.Terrain) {
-      onUpdateItem({ ...selectedItem, color1: newColor } as TerrainConfig);
-    }
-  };
-
-  const handleColor2Change = (newColor: string) => {
-    if (selectedItem.type === SceneObjectType.Terrain) {
-      onUpdateItem({ ...selectedItem, color2: newColor } as TerrainConfig);
-    }
-  };
-
-  const handleMixFactorChange = (newMixFactor: number) => {
-    if (selectedItem.type === SceneObjectType.Terrain) {
-      onUpdateItem({ ...selectedItem, mixFactor: newMixFactor } as TerrainConfig);
-    }
-  };
-
-  const handleMixPatternChange = (newPattern: 'gradient' | 'noise' | 'checkerboard') => {
-    if (selectedItem.type === SceneObjectType.Terrain) {
-      onUpdateItem({ ...selectedItem, mixPattern: newPattern } as TerrainConfig);
+  const handleOpacityChange = (newOpacity: number) => {
+    if ('opacity' in selectedItem || selectedItem.type === SceneObjectType.Mesh || selectedItem.type === SceneObjectType.Group || selectedItem.type === SceneObjectType.ImportedGLB) {
+      onUpdateItem({ ...selectedItem, opacity: newOpacity } as SceneObject);
     }
   };
 
@@ -136,14 +116,20 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
   
   const selectedItemIsManagableSceneObject = (item: SelectableItem): item is SceneObject => {
     return item.type === SceneObjectType.Mesh || 
-            item.type === SceneObjectType.PointLight || 
-            item.type === SceneObjectType.DirectionalLight || 
-            item.type === SceneObjectType.Group ||
-            item.type === SceneObjectType.ImportedGLB;
+           item.type === SceneObjectType.PointLight || 
+           item.type === SceneObjectType.DirectionalLight || 
+           item.type === SceneObjectType.Group ||
+           item.type === SceneObjectType.ImportedGLB;
   }
 
+  const canHaveOpacityControl = (item: SelectableItem): item is MeshObject | GroupObject | ImportedGLBObject => {
+    return item.type === SceneObjectType.Mesh || 
+           item.type === SceneObjectType.Group ||
+           item.type === SceneObjectType.ImportedGLB;
+  };
+
   const canBeGroupChild = (item: SelectableItem): item is MeshObject | PointLightObject | DirectionalLightObject | ImportedGLBObject => {
-      return item.type === SceneObjectType.Mesh || 
+     return item.type === SceneObjectType.Mesh || 
             item.type === SceneObjectType.PointLight || 
             item.type === SceneObjectType.DirectionalLight ||
             item.type === SceneObjectType.ImportedGLB;
@@ -163,7 +149,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
         <h3 className="text-lg font-semibold text-white capitalize truncate pr-2" title={displayName.replace(/_/g, ' ')}>{displayName.replace(/_/g, ' ')}</h3>
         <div className="flex space-x-2">
           {onDuplicateItem && selectedItemIsManagableSceneObject(selectedItem) && isSelectedTypeDuplicable && numSelectedTotal === 1 && (
-              <Button onClick={() => onDuplicateItem(selectedItem.id)} variant="secondary" size="sm" className="p-1.5" title="Duplicar Objeto">
+             <Button onClick={() => onDuplicateItem(selectedItem.id)} variant="secondary" size="sm" className="p-1.5" title="Duplicar Objeto">
                 <DuplicateIcon className="w-4 h-4" />
             </Button>
           )}
@@ -173,7 +159,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             </Button>
           )}
           {onDeleteItem && isTerrainSelectedAndExists && numSelectedTotal === 1 && ( 
-              <Button 
+             <Button 
                 onClick={() => onDeleteItem(selectedItem.id)} 
                 variant="danger" 
                 size="sm" 
@@ -198,6 +184,16 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
         <ColorPicker label="Cor do Terreno" color={currentTerrainConfig.color} onChange={(v) => handleTerrainPropertyChange('color', v)} />
       )}
 
+      {/* Opacity Slider */}
+      {selectedItemIsManagableSceneObject(selectedItem) && canHaveOpacityControl(selectedItem) && numSelectedTotal === 1 && (
+        <Slider 
+          label="Opacidade" 
+          value={(selectedItem as MeshObject | GroupObject | ImportedGLBObject).opacity ?? 1.0} 
+          min={0} max={1} step={0.01} 
+          onChange={handleOpacityChange} 
+        />
+      )}
+
       {'intensity' in selectedItem && (
         <Slider label="Intensidade" value={(selectedItem as any).intensity} min={0} max={10} step={0.1} onChange={handleIntensityChange} />
       )}
@@ -205,9 +201,9 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
       {selectedItemIsManagableSceneObject(selectedItem) && 'transform' in selectedItem && renderTransformControls(selectedItem.transform)}
 
       {selectedItemIsManagableSceneObject(selectedItem) && 
-        selectedItem.type !== SceneObjectType.Group && 
-        canBeGroupChild(selectedItem) && 
-        onSetParentGroup && numSelectedTotal === 1 && (
+       selectedItem.type !== SceneObjectType.Group && 
+       canBeGroupChild(selectedItem) && 
+       onSetParentGroup && numSelectedTotal === 1 && (
         <div className="mt-4 pt-3 border-t border-gray-700">
           <label htmlFor="group-select" className="block text-sm font-medium text-gray-300 mb-1">
             Grupo Pai:
@@ -245,7 +241,7 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
             <p className="text-sm text-gray-500 italic">Este grupo está vazio.</p>
           )}
           {onDisbandGroup && numSelectedTotal === 1 && ( 
-              <Button onClick={() => onDisbandGroup(selectedItem.id)} variant="secondary" size="sm" className="w-full mt-3">
+             <Button onClick={() => onDisbandGroup(selectedItem.id)} variant="secondary" size="sm" className="w-full mt-3">
                 <GroupIcon className="mr-2 opacity-70 w-4 h-4" /> Desmembrar Grupo
             </Button>
           )}
@@ -295,18 +291,16 @@ const RightSidebar: React.FC<RightSidebarProps> = ({
                 <Slider label="Amplitude da Onda" value={currentTerrainConfig.sineAmplitude} min={0} max={10} step={0.1} onChange={(v) => handleTerrainPropertyChange('sineAmplitude',v)} />
               </>
             )}
-            {/* If Flat, no additional controls needed, amplitude set to 0 by default or handled in ThreeCanvas */}
-              {(currentTerrainConfig.heightGenerationMethod === HeightGenerationMethod.SimplexNoise || currentTerrainConfig.heightGenerationMethod === HeightGenerationMethod.SineWave) &&
-                currentTerrainConfig.noiseAmplitude === 0 && currentTerrainConfig.sineAmplitude === 0 && (
+            {(currentTerrainConfig.heightGenerationMethod === HeightGenerationMethod.SimplexNoise || currentTerrainConfig.heightGenerationMethod === HeightGenerationMethod.SineWave) &&
+               currentTerrainConfig.noiseAmplitude === 0 && currentTerrainConfig.sineAmplitude === 0 && (
                 <p className="text-xs text-yellow-400 mt-1 italic">Dica: Aumente a amplitude para ver o efeito.</p>
             )}
           </div>
         </>
       )}
 
-
       {selectedItem.type === SceneObjectType.Camera && (
-          <>
+         <>
           <h4 className="text-md font-semibold mt-3 mb-1 text-gray-200">Posição da Câmera</h4>
           <Slider label="X" value={(selectedItem as CameraConfig).position.x} min={-50} max={50} step={0.1} onChange={(v) => handleCameraPositionChange('x', v)} />
           <Slider label="Y" value={(selectedItem as CameraConfig).position.y} min={-50} max={50} step={0.1} onChange={(v) => handleCameraPositionChange('y', v)} />

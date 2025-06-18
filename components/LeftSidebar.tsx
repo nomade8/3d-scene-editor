@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useMemo } from 'react';
 import { SceneObjectType, ShapeType, PointLightObject, DirectionalLightObject, MeshObject, SceneObject as SceneObjectTypeUnion, AppState } from '../types';
 import Button from './Button';
@@ -44,6 +45,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
     const newShape: MeshObject = {
       id: THREE.MathUtils.generateUUID(), name: `${shape} ${Date.now() % 1000}`, type: SceneObjectType.Mesh, shape, color: '#cccccc',
       transform: { position: { x: Math.random() * 4 - 2, y: 1 + Math.random() * 2, z: Math.random() * 4 - 2 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+      opacity: 1.0, // Default opacity
     };
     onAddItem(newShape);
   };
@@ -52,6 +54,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
     const commonLightProps = {
       id: THREE.MathUtils.generateUUID(), name: `${type === SceneObjectType.PointLight ? 'Point' : 'Directional'} Light ${Date.now() % 1000}`, color: '#ffffff',
       transform: { position: { x: Math.random() * 4 - 2, y: 3 + Math.random() * 2, z: Math.random() * 4 - 2 }, rotation: { x: 0, y: 0, z: 0 }, scale: { x: 1, y: 1, z: 1 } },
+      opacity: 1.0, // Lights don't visually use opacity, but BaseSceneObject has it
     };
     if (type === SceneObjectType.PointLight) onAddItem({ ...commonLightProps, type: SceneObjectType.PointLight, intensity: 5 } as PointLightObject);
     else onAddItem({ ...commonLightProps, type: SceneObjectType.DirectionalLight, intensity: 2 } as DirectionalLightObject);
@@ -71,29 +74,11 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({
             item && 
             item.type !== SceneObjectType.Group && 
             (item.type === SceneObjectType.Mesh || 
-              item.type === SceneObjectType.PointLight || 
-              item.type === SceneObjectType.DirectionalLight || 
-              item.type === SceneObjectType.ImportedGLB)
+             item.type === SceneObjectType.PointLight || 
+             item.type === SceneObjectType.DirectionalLight || 
+             item.type === SceneObjectType.ImportedGLB)
         ).length;
   }, [selectedObjectIds, appState.sceneObjects]);
-
-  const handleAddTerrain = () => {
-    const newTerrain: TerrainConfig = {
-      id: THREE.MathUtils.generateUUID(),
-      name: `Terrain ${Date.now() % 1000}`,
-      type: SceneObjectType.Terrain,
-      width: 10,
-      height: 10,
-      widthSegments: 32,
-      heightSegments: 32,
-      color: '#8B4513',        // Manter para compatibilidade
-      color1: '#8B4513',       // Marrom
-      color2: '#228B22',       // Verde
-      mixFactor: 0.5,
-      mixPattern: 'gradient'
-    };
-    onAddTerrain();
-  };
 
   return (
     <div className="w-72 bg-gray-800 p-4 space-y-3 border-r border-gray-700 h-full overflow-y-auto shadow-lg">

@@ -158,10 +158,11 @@ const App: React.FC = () => {
   }, [primarySelectedItemId, appState.sceneObjects, appState.sky, appState.terrain, appState.cameraConfig, appState.ambientLight]);
 
   const handleAddItem = useCallback((item: SceneObject) => {
+    const itemWithOpacity = { ...item, opacity: item.opacity ?? 1.0 };
     setAppState(prev => ({
       ...prev,
-      sceneObjects: [...prev.sceneObjects, item],
-      selectedObjectIds: [item.id],
+      sceneObjects: [...prev.sceneObjects, itemWithOpacity],
+      selectedObjectIds: [itemWithOpacity.id],
     }));
   }, []);
 
@@ -234,6 +235,8 @@ const App: React.FC = () => {
       duplicatedObject.transform.position.x += 0.5;
       duplicatedObject.transform.position.y += 0.5;
       duplicatedObject.parentId = undefined; 
+      duplicatedObject.opacity = originalObject.opacity ?? 1.0;
+
 
       return {
         ...prev,
@@ -373,6 +376,7 @@ const App: React.FC = () => {
         const newGlbObject: ImportedGLBObject = {
           id: importedModelData.id, name: importedModelData.name,
           type: SceneObjectType.ImportedGLB, transform: importedModelData.transform,
+          opacity: 1.0, // Default opacity for new GLB
         };
         setAppState(prev => ({
           ...prev, sceneObjects: [...prev.sceneObjects, newGlbObject],
@@ -480,6 +484,7 @@ const App: React.FC = () => {
         transform: newGroupTransform,
         childIds: updatedChildren.map(c => c.id),
         parentId: undefined, 
+        opacity: 1.0, // Default opacity for new group
       };
 
       let newSceneObjectsList = [...itemsToKeep, ...updatedChildren, newGroupAppObject];
