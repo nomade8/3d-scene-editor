@@ -385,12 +385,14 @@ const ThreeCanvas = forwardRef<ThreeCanvasHandle, ThreeCanvasProps>(({ appState,
               const worldPosition = new THREE.Vector3();
               draggedThreeObjectRef.current.getWorldPosition(worldPosition);
               selectedObjectInitialPositionRef.current.copy(worldPosition);
+              // console.log('[HPD] selectedObjectInitialWorldPosition:', worldPosition.clone());
 
               const axisDir = new THREE.Vector3(); // This is in World Space as Gizmo is not rotated with object
               if (selectedGizmoAxisRef.current === 'x') axisDir.set(1, 0, 0);
               else if (selectedGizmoAxisRef.current === 'y') axisDir.set(0, 1, 0);
               else axisDir.set(0, 0, 1);
               dragLineDirectionRef.current.copy(axisDir);
+              // console.log('[HPD] dragLineDirection:', dragLineDirectionRef.current.clone());
               
               const camera = cameraRef.current;
               const cameraPosition = new THREE.Vector3();
@@ -414,10 +416,12 @@ const ThreeCanvas = forwardRef<ThreeCanvasHandle, ThreeCanvasProps>(({ appState,
               }
               
               dragPlaneRef.current.setFromNormalAndCoplanarPoint(planeNormal, worldPosition);
+              // console.log('[HPD] dragPlaneNormal:', planeNormal.clone());
 
               const intersectionPoint = new THREE.Vector3();
               if (raycasterRef.current.ray.intersectPlane(dragPlaneRef.current, intersectionPoint)) {
                   dragStartOffsetOnPlaneRef.current.copy(intersectionPoint);
+                  // console.log('[HPD] dragStartOffsetOnPlane (intersect):', dragStartOffsetOnPlaneRef.current.clone());
               } else {
                   // Fallback if ray is parallel to the plane (should be rare with new normal logic)
                   // Project object's center onto the ray.
@@ -425,7 +429,8 @@ const ThreeCanvas = forwardRef<ThreeCanvasHandle, ThreeCanvasProps>(({ appState,
                   const t = ray.direction.dot(new THREE.Vector3().subVectors(worldPosition, ray.origin));
                   intersectionPoint.copy(ray.origin).addScaledVector(ray.direction, t);
                   dragStartOffsetOnPlaneRef.current.copy(intersectionPoint);
-                  console.warn("[Gizmo Drag] Ray parallel to drag plane, using fallback intersection.");
+                  // console.warn("[Gizmo Drag] Ray parallel to drag plane, using fallback intersection."); // Keep warns active
+                  // console.log('[HPD] dragStartOffsetOnPlane (fallback):', dragStartOffsetOnPlaneRef.current.clone());
               }
             }
             return; 
@@ -506,10 +511,14 @@ const ThreeCanvas = forwardRef<ThreeCanvasHandle, ThreeCanvasProps>(({ appState,
 
         const currentPointOnPlane = new THREE.Vector3();
         if (raycasterRef.current.ray.intersectPlane(dragPlaneRef.current, currentPointOnPlane)) {
+          // console.log('[HPM] currentPointOnPlane:', currentPointOnPlane.clone());
           const moveVectorOnPlane = new THREE.Vector3().subVectors(currentPointOnPlane, dragStartOffsetOnPlaneRef.current);
+          // console.log('[HPM] moveVectorOnPlane:', moveVectorOnPlane.clone());
           const projectedMovement = moveVectorOnPlane.projectOnVector(dragLineDirectionRef.current);
+          // console.log('[HPM] projectedMovement:', projectedMovement.clone());
           
           const newWorldPosition = new THREE.Vector3().copy(selectedObjectInitialPositionRef.current).add(projectedMovement);
+          // console.log('[HPM] newWorldPosition:', newWorldPosition.clone());
           
           const objectToMove = draggedThreeObjectRef.current;
           if (objectToMove.parent && objectToMove.parent !== sceneRef.current) {
@@ -517,6 +526,7 @@ const ThreeCanvas = forwardRef<ThreeCanvasHandle, ThreeCanvasProps>(({ appState,
             parent.updateWorldMatrix(true, false); 
             const parentInverseWorldMatrix = parent.matrixWorld.clone().invert();
             const newLocalPosition = newWorldPosition.clone().applyMatrix4(parentInverseWorldMatrix);
+            // console.log('[HPM] newLocalPosition:', newLocalPosition.clone());
             objectToMove.position.copy(newLocalPosition);
           } else {
             objectToMove.position.copy(newWorldPosition);
@@ -535,6 +545,7 @@ const ThreeCanvas = forwardRef<ThreeCanvasHandle, ThreeCanvasProps>(({ appState,
       if (isGizmoDraggingRef.current && selectedGizmoAxisRef.current && draggedThreeObjectRef.current && controlsRef.current && appStateRef.current && sceneRef.current) {
         const finalWorldPosition = new THREE.Vector3();
         draggedThreeObjectRef.current.getWorldPosition(finalWorldPosition); 
+        // console.log('[HPU] finalWorldPosition:', finalWorldPosition.clone());
         
         const sceneObjectData = appStateRef.current.sceneObjects.find(obj => obj.id === (draggedThreeObjectRef.current!.userData.appId || draggedThreeObjectRef.current!.uuid) );
 
@@ -547,13 +558,16 @@ const ThreeCanvas = forwardRef<ThreeCanvasHandle, ThreeCanvasProps>(({ appState,
                   parentThreeObject.updateWorldMatrix(true, false);
                   const parentWorldMatrixInverse = parentThreeObject.matrixWorld.clone().invert();
                   const localPosition = finalWorldPosition.clone().applyMatrix4(parentWorldMatrixInverse);
+                  // console.log('[HPU] localPosition (before parseFloat):', localPosition.clone());
                   positionForApp = { x: parseFloat(localPosition.x.toFixed(2)), y: parseFloat(localPosition.y.toFixed(2)), z: parseFloat(localPosition.z.toFixed(2)) };
               } else { 
+                  // console.warn(`[HPU] Parent object ${sceneObjectData.parentId} not found in Three.js scene. Using world position.`); // Keep warns active
                   positionForApp = { x: parseFloat(finalWorldPosition.x.toFixed(2)), y: parseFloat(finalWorldPosition.y.toFixed(2)), z: parseFloat(finalWorldPosition.z.toFixed(2)) };
               }
           } else {
              positionForApp = { x: parseFloat(finalWorldPosition.x.toFixed(2)), y: parseFloat(finalWorldPosition.y.toFixed(2)), z: parseFloat(finalWorldPosition.z.toFixed(2)) };
           }
+          // console.log('[HPU] positionForApp:', positionForApp);
 
           const newTransform: Transform = {
               position: positionForApp,

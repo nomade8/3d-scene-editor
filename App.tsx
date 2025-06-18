@@ -75,18 +75,22 @@ const calculateWorldMatrixFromState = (
     matricesCache: Map<string, THREE.Matrix4>
   ): THREE.Matrix4 => {
   if (!objectId) {
+    // console.log('[CWMS] Reached root (no objectId), returning identity.');
     return new THREE.Matrix4(); // Identity for scene root
   }
   if (matricesCache.has(objectId)) {
+    // console.log(`[CWMS] Cache hit for ${objectId}.`);
     return matricesCache.get(objectId)!.clone();
   }
 
+  // console.log(`[CWMS] Calculating for ${objectId}`);
   const object = allObjects.find(obj => obj.id === objectId);
   if (!object) {
-    console.warn(`[App.tsx] Object ${objectId} not found for matrix calculation.`);
+    // console.warn(`[CWMS] Object ${objectId} not found for matrix calculation.`); // Keep warns active
     return new THREE.Matrix4(); // Identity
   }
 
+  // console.log(`[CWMS] Transform for ${objectId}:`, JSON.parse(JSON.stringify(object.transform)));
   const localMatrix = new THREE.Matrix4();
   const pos = object.transform.position;
   const rot = object.transform.rotation; // Assuming degrees
@@ -102,10 +106,15 @@ const calculateWorldMatrixFromState = (
     )),
     new THREE.Vector3(scale.x, scale.y, scale.z)
   );
+  // console.log(`[CWMS] Local matrix for ${objectId}:`, localMatrix.elements);
 
   const parentWorldMatrix = calculateWorldMatrixFromState(object.parentId, allObjects, matricesCache);
+  // if (object.parentId) console.log(`[CWMS] Parent (${object.parentId}) world matrix for ${objectId}:`, parentWorldMatrix.elements);
+  // else console.log(`[CWMS] No parent for ${objectId}, parentWorldMatrix is identity.`);
+
   const worldMatrix = new THREE.Matrix4().multiplyMatrices(parentWorldMatrix, localMatrix);
   matricesCache.set(objectId, worldMatrix.clone());
+  // console.log(`[CWMS] Calculated world matrix for ${objectId}:`, worldMatrix.elements);
   return worldMatrix;
 };
 
